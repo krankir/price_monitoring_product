@@ -3,9 +3,9 @@ import json
 import requests
 import re
 
-from scrap_data.cookies_and_headers import cookies, headers, cookies_price, \
+from src.scrap_data.cookies_and_headers import cookies, headers, cookies_price, \
     headers_price
-from scrap_data.models import Item
+from src.scrap_data.models import Item
 
 
 class ScrapDataProduct:
@@ -57,6 +57,7 @@ class ScrapDataProduct:
         price = (response_pr.json()).get('body').get('materialPrices')[0].get(
             'price').get('salePrice')
         print(price)
+        print(type(price))
 
 
 if __name__ == '__main__':
