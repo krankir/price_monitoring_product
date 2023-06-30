@@ -43,7 +43,6 @@ class ScrapDataProduct:
 
     def scrap_price(self):
         product_id = self.__get_product_id()
-        print(product_id)
         params_price = {
             'productIds': product_id,
             'isPromoApplied': 'true',
@@ -60,6 +59,6 @@ class ScrapDataProduct:
         return price
 
 
-if __name__ == '__main__':
-    url = input()
-    ScrapDataProduct(url).scrap_price()
+# if __name__ == '__main__':
+#     url = 'https://www.mvideo.ru/products/smartfon-realme-c31-3-32-dark-green-rmx3501-30063689'
+#     print(ScrapDataProduct(url=url).scrap_price())

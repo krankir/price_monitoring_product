@@ -1,0 +1,42 @@
+version: '3.7'
+services:
+  db:
+    image: postgres:15
+    container_name: db
+    volumes:
+      - .:/docker-entrypoint-initdb.d
+    env_file:
+      - .env-non-dev
+
+
+  app:
+    build:
+      context: .
+    env_file:
+      - .env-non-dev
+    container_name: fastapi_app
+    command: [ '/fastapi_app/docker/app.sh', '/fastapi_app/docker/scrap_1_hour_price.sh' ]
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+
+
+  bot:
+    build:
+      context: ./mvideo_scrap_bot
+    env_file:
+      - .env-non-dev
+    container_name: mvideo_scrap_bot
+    depends_on:
+      - db
+
+  pars_1_hour:
+    build:
+      context: ./scrap_1_hour
+    env_file:
+      - .env-non-dev
+    container_name: scrap_1_hour
+    depends_on:
+      - db
+      - app
