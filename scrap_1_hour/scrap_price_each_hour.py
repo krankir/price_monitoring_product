@@ -3,7 +3,7 @@ from datetime import datetime
 import psycopg2 as ps
 import schedule
 
-from config import DATABASE_URI
+from config import DATABASE_URI, SEC
 from scrap_data.scrap_main import ScrapDataProduct
 
 con = ps.connect(DATABASE_URI)
@@ -38,7 +38,7 @@ def scrap_one_hour():
 def main():
     """Планировщик выполнения скрипта"""
     # schedule.every().hour.do(scrap_one_hour)
-    schedule.every(10).seconds.do(scrap_one_hour)
+    schedule.every(SEC).seconds.do(scrap_one_hour)
 
     while True:
         schedule.run_pending()

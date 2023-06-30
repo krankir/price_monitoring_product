@@ -12,7 +12,7 @@
 
 2. Телеграм бот с аналогичным функционалом. Реализован с помощью библиотеки [aiogram](https://aiogram.dev).
 
-3. Модуль мониторинга, который будет периодически получать новую цену товара. Реализован с помощью библиотеки [schedule](https://github.com/dbader/schedule).
+3. Модуль мониторинга, который будет периодически получать новую цену товара. Реализован с помощью библиотеки [schedule](https://github.com/dbader/schedule). Периодичность обновления, задаётся в файле config.
 
 
 ### Технологии:
@@ -25,15 +25,25 @@ Python, FastAPI, Docker, Gunicorn, PostgreSQL, aiogram, schedule, sqlalchemy
 ```
 git@github.com:krankir/price_monitoring_product.git
 ```
-- Создать и запустить контейнеры Docker
+- Сборка проекта (все команды выполняются из директории с файлом docker-compose.yml):
 ```
-sudo docker compose up -d
+$ docker-compose build
+```
+- Запуск проекта:
+```
+$ docker-compose up
 ```
 - Для остановки контейнеров Docker:
 ```
-sudo docker compose down -v      # с их удалением
-sudo docker compose stop         # без удаления
+docker-compose down -v      # с их удалением
+docker-compose stop         # без удаления
+
+- Или остановить сочетанием клавиш:
+
+Ctrl+C                      # windows, linux
+command+C                   # Mac
 ```
+
 - В директории price_monitoring_product файл example.env переименовать в .env-non-dev и заполнить своими данными:
 ```
 DB_HOST=db_host
