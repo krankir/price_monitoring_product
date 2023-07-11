@@ -10,4 +10,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 # run app
-CMD ["python3", "Mvideo_Scrap_PriceBot.py"]
+CMD ["python3", "mvideo_scrap_price_bot.py"]
