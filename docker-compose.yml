@@ -23,7 +23,7 @@ services:
     depends_on:
       - db
     volumes:
-      - /Users/Anatoliy_Redko/PycharmProjects/price_monitoring_product/scrap_data:/fastapi_app/src/scrap_data
+      - ./scrap_data:/fastapi_app/src/scrap_data
 
   bot:
     build:
@@ -33,7 +33,7 @@ services:
     container_name: mvideo_scrap_bot
     restart: always
     volumes:
-      - /Users/Anatoliy_Redko/PycharmProjects/price_monitoring_product/scrap_data:/mvideo_scrap_bot/scrap_data
+      - ./scrap_data:/mvideo_scrap_bot/scrap_data
     depends_on:
       - db
 
@@ -45,7 +45,7 @@ services:
     container_name: scrap_1_hour
     restart: always
     volumes:
-      - /Users/Anatoliy_Redko/PycharmProjects/price_monitoring_product/scrap_data:/scrap_1_hour/scrap_data
+      - ./scrap_data:/scrap_1_hour/scrap_data
     depends_on:
       - db
       - app
