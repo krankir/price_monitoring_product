@@ -1,8 +1,8 @@
-"""Add Price and Product
+"""initial
 
-Revision ID: 39244f2b47fc
+Revision ID: 9721c4b51986
 Revises: 
-Create Date: 2023-06-27 20:58:38.720024
+Create Date: 2023-07-09 00:41:37.131684
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '39244f2b47fc'
+revision = '9721c4b51986'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,8 +31,8 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('price', sa.Numeric(), nullable=False),
     sa.Column('price_at', sa.TIMESTAMP(), nullable=True),
-    sa.Column('product_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['product_id'], ['products.id'], ),
+    sa.Column('product_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['product_id'], ['products.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###

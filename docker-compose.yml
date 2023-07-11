@@ -5,6 +5,7 @@ services:
     container_name: db
     volumes:
       - .:/docker-entrypoint-initdb.d
+    restart: always
     env_file:
       - .env-non-dev
 
@@ -18,9 +19,11 @@ services:
     command: [ '/fastapi_app/docker/app.sh', '/fastapi_app/docker/scrap_1_hour_price.sh' ]
     ports:
       - 8000:8000
+    restart: always
     depends_on:
       - db
-
+    volumes:
+      - /Users/Anatoliy_Redko/PycharmProjects/price_monitoring_product/scrap_data:/fastapi_app/src/scrap_data
 
   bot:
     build:
@@ -28,6 +31,9 @@ services:
     env_file:
       - .env-non-dev
     container_name: mvideo_scrap_bot
+    restart: always
+    volumes:
+      - /Users/Anatoliy_Redko/PycharmProjects/price_monitoring_product/scrap_data:/mvideo_scrap_bot/scrap_data
     depends_on:
       - db
 
@@ -37,6 +43,9 @@ services:
     env_file:
       - .env-non-dev
     container_name: scrap_1_hour
+    restart: always
+    volumes:
+      - /Users/Anatoliy_Redko/PycharmProjects/price_monitoring_product/scrap_data:/scrap_1_hour/scrap_data
     depends_on:
       - db
       - app
