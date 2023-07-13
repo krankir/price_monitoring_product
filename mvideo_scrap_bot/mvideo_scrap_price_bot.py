@@ -5,11 +5,14 @@ from aiogram.types import (
     KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
-from dotenv import load_dotenv
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 from aiogram.utils.markdown import hbold, hlink
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from dotenv import load_dotenv
 from config import DATABASE_URI
 from models import Product, Price
 from scrap_data.scrap_main import ScrapDataProduct
@@ -23,11 +26,21 @@ engine = create_engine(DATABASE_URI, echo=True)
 Session = sessionmaker(bind=engine)
 
 bot = Bot(token=os.getenv('TOKEN'), parse_mode=types.ParseMode.HTML)
-dp = Dispatcher(bot)
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
 
-PRODUCT_LINC = ''
-NAME_PRODUCT_DELETE = ''
-NAME_PRODUCT_PRICE = ''
+
+class ChoiceLincProduct(StatesGroup):
+    product_linc = State()
+
+
+class ChoiceIdProductDelete(StatesGroup):
+    id_product_delete = State()
+
+
+class ChoiceIdProductPrice(StatesGroup):
+    id_product_price = State()
+
 
 async def on_startup(_):
     """Действия перед запуском бота."""
@@ -57,51 +70,43 @@ async def command_start(message: types.Message):
                          reply_markup=kb_client,
                          )
 
-price_product = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton(
-    text='Да, показать цену этого товара', callback_data='get_price'))
 
 @dp.message_handler(
     lambda message: 'Получение истории цен на товар' in message.text)
 async def delete_product(message: types.Message):
     """История изменения цен на товар."""
-    await message.answer('Напишите в чат: история цен (id товара)')
+    await message.answer('Напишите в чат id товара ')
+    await ChoiceIdProductPrice.id_product_price.set()
 
-@dp.message_handler(lambda message: 'история цен' in message.text.lower())
-async def delete_product(message: types.Message):
+@dp.message_handler(state=ChoiceIdProductPrice.id_product_price)
+async def delete_product(message: types.Message, state: FSMContext):
     """История изменения цен на товар."""
-    global NAME_PRODUCT_PRICE
-    NAME_PRODUCT_PRICE = message.text[11:].strip()
-    await message.answer(
-        f'Показать цену товара c id? {NAME_PRODUCT_PRICE}',
-        reply_markup=price_product,
-    )
-
-@dp.callback_query_handler(text='get_price')
-async def get_price_product(callback: types.CallbackQuery):
-    """История изменения цен на товар."""
-    await callback.answer('Показать цены на товар')
+    await state.update_data(id_product_price=message.text)
+    data = await state.get_data()
+    id_price = data.get('id_product_price')
     session = Session()
     product = session.query(Product).filter(
-        Product.id == NAME_PRODUCT_PRICE).first()
+        Product.id == id_price).first()
     if product is None:
-        await callback.message.answer(
-            '❌Товара с таким id ещё нету в списке, сначала добавьте'
-            ' товар')
+        await message.answer(
+            '❌Товара с таким id ещё нету в списке, сначала добавьте товар')
+        await state.finish()
     else:
         product_prices = select(Price).filter(
-            Price.product_id == NAME_PRODUCT_PRICE).order_by(
+            Price.product_id == id_price).order_by(
             desc(Price.price_at)
         )
         res = session.scalars(product_prices)
         for index, product in enumerate(res):
-            card = f'{hbold("Товар c id: ")} {NAME_PRODUCT_PRICE}\n' \
+            card = f'{hbold("Товар c id: ")} {id_price}\n' \
                    f'{hbold("Цена: ")} {product.price}🔥\n' \
                    f'{hbold("Дата и время обновления: ")} {product.price_at}\n'
 
             if index  == 20:
                 break
 
-            await callback.message.answer(card)
+            await message.answer(card)
+            await state.finish()
 
 @dp.message_handler(
     lambda message: 'Получение списка всех товаров' in message.text)
@@ -124,61 +129,45 @@ async def all_product(message: types.Message):
 
         await message.answer(card)
 
-del_product_inline = InlineKeyboardMarkup(row_width=2).add(InlineKeyboardButton(
-    text='Да, удалить с мониторинга', callback_data='delet'))
 
 @dp.message_handler(lambda message: 'Удаление товара' in message.text)
 async def delete_product(message: types.Message):
     """Удаление товара из мониторинга."""
-    await message.answer('Напишите в чат:'
-                         ' удалить (id товара из карточки)')
-
-@dp.message_handler(lambda message: 'удалить' in message.text.lower())
-async def delete_product(message: types.Message):
-    """Удаление товара из мониторинга."""
-    global NAME_PRODUCT_DELETE
-    NAME_PRODUCT_DELETE = message.text[7:].strip()
     await message.answer(
-        f'Вы уверены что хотите удалить именно этот товар? {message.text[7:]}',
-        reply_markup=del_product_inline,
+        'Напишите id товара из карточки для его удаления из мониторинга'
     )
+    await ChoiceIdProductDelete.id_product_delete.set()
 
-@dp.callback_query_handler(text='delet')
-async def www_pars(callback: types.CallbackQuery):
+@dp.message_handler(state=ChoiceIdProductDelete.id_product_delete)
+async def delete_product(message: types.Message, state: FSMContext):
     """Удаление товара из мониторинга."""
+    await state.update_data(id_product_delete=message.text)
+    data = await state.get_data()
+    id_p = data.get('id_product_delete')
     session = Session()
-    product_delete = session.get(Product, NAME_PRODUCT_DELETE)
+    product_delete = session.get(Product, id_p)
     session.delete(product_delete)
     session.commit()
-    await callback.message.answer('Товар успешно удалён 🗑')
+    await state.finish()
+    await message.answer('Товар успешно удалён 🗑')
 
-add_products_inline = InlineKeyboardMarkup(row_width=1).add(
-    InlineKeyboardButton(
-        text='Добавить товар на мониторинг', callback_data='scrap'))
 
 @dp.message_handler(
     lambda message: 'Добавить товар на мониторинг' in message.text)
-async def delete_product(message: types.Message):
+async def add_product(message: types.Message):
     """Добавление товара на мониторинг."""
-    await message.answer('Напишите в чат: ссылку на товар с сайта М.видео')
+    text_ = 'Напишите ссылку на товар с сайта М.видео'
+    await message.answer(text_)
+    await ChoiceLincProduct.product_linc.set()
 
-@dp.message_handler(
-    lambda message: 'https://www.mvideo.ru/products/' in message.text)
-async def www_par(message: types.Message):
-    """Добавление товара на мониторинг."""
-    global PRODUCT_LINC
-    PRODUCT_LINC = message.text
-    await message.answer(
-        'Вы уверены что хотите добавить именно этот товар? ',
-        reply_markup=add_products_inline,
-    )
 
-@dp.callback_query_handler(text='scrap')
-async def www_pars(callback: types.CallbackQuery):
+@dp.message_handler(state=ChoiceLincProduct.product_linc)
+async def www_par(message: types.Message, state: FSMContext):
     """Добавление товара на мониторинг."""
-    await callback.answer('Начать добавление?', show_alert=True)
-    product = ScrapDataProduct(PRODUCT_LINC).scrap()
-    linc = str(PRODUCT_LINC)
+    await state.update_data(product_linc=message.text)
+    data = await state.get_data()
+    linc = data.get('product_linc')
+    product = ScrapDataProduct(linc).scrap()
     name = product['name']
     description = product['description']
     rating = product['rating']
@@ -186,8 +175,9 @@ async def www_pars(callback: types.CallbackQuery):
     product = session.query(Product).filter(
         Product.url == linc).first()
     if product is not None:
-        await callback.message.answer(
+        await message.answer(
             '❌ Данный товар уже присутствует на мониторинге.')
+        await state.finish()
     else:
         new_product = Product(url=linc,
                               name=name,
@@ -196,7 +186,9 @@ async def www_pars(callback: types.CallbackQuery):
                               )
         session.add(new_product)
         session.commit()
-        await callback.message.answer('Товар успешно добавлен✅')
+        await message.answer('Товар успешно добавлен✅')
+        await state.finish()
+
 
 @dp.message_handler()
 async def echo_send(message: types.Message):
@@ -205,11 +197,13 @@ async def echo_send(message: types.Message):
         'Неверная команда, прочтите ещё раз какой должен быть запрос и'
         ' повторите попытку...')
 
+
 def main():
     executor.start_polling(dp, skip_updates=True,
                            on_startup=on_startup,
                            on_shutdown=on_shutdown,
                            )
+
 
 if __name__ == '__main__':
     main()
