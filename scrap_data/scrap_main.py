@@ -1,5 +1,5 @@
-import requests
 import re
+import requests
 
 from scrap_data.cookies_and_headers import (
     cookies, headers, cookies_price, headers_price,
@@ -21,12 +21,14 @@ class ScrapDataProduct:
         return product_id
 
     def scrap(self):
+        """Получение данных о продукте."""
         product_id = self.__get_product_id()
         params = {'productId': product_id}
         response = requests.get('https://www.mvideo.ru/bff/product-details',
                                 params=params,
                                 cookies=cookies,
                                 headers=headers,
+                                timeout=10,
                                 )
         products_infos = Item.parse_obj(response.json()['body'])
         data_dict = {
@@ -36,12 +38,10 @@ class ScrapDataProduct:
                 products_infos.description),
             'rating': round(products_infos.rating.get('star'), 2)
         }
-        # print(data_dict['description'])
-        # with open('data.json', 'a') as file:
-        #     json.dump(data_dict, file, indent=4, ensure_ascii=False)
         return data_dict
 
     def scrap_price(self):
+        """Получение цены продукта."""
         product_id = self.__get_product_id()
         print(product_id)
         params_price = {
@@ -54,12 +54,8 @@ class ScrapDataProduct:
             params=params_price,
             cookies=cookies_price,
             headers=headers_price,
+            timeout=10,
         )
         price = (response_pr.json()).get('body').get('materialPrices')[0].get(
             'price').get('salePrice')
         return price
-
-
-if __name__ == '__main__':
-    url = input()
-    ScrapDataProduct(url).scrap_price()
