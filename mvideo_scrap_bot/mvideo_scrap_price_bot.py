@@ -1,10 +1,7 @@
 import os
 import time
 
-from aiogram.types import (
-    KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup,
-    InlineKeyboardButton,
-)
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
@@ -12,13 +9,13 @@ from aiogram.utils.markdown import hbold, hlink
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from scrap_data.scrap_main import ScrapDataProduct
 from sqlalchemy import desc, create_engine, select
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 
 from models import Product, Price
 from config import DATABASE_URI
+from scrap_data.scrap_main import ScrapDataProduct
 
 
 
