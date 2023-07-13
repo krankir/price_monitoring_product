@@ -1,9 +1,9 @@
 from datetime import datetime
 import schedule
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from config import DATABASE_URI, SEC
 from models import Product, Price
+from config import DATABASE_URI, SEC
 from scrap_data.scrap_main import ScrapDataProduct
 
 
@@ -13,6 +13,7 @@ Session = sessionmaker(bind=engine)
 URL_LIST = []
 
 def scrap_one_hour():
+    """Периодическое получение цены и занесение значений в базу данных."""
     session = Session()
     for i in session.query(Product).all():
         URL_LIST.append(i.url)

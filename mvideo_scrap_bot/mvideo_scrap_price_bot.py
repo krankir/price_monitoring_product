@@ -30,10 +30,12 @@ NAME_PRODUCT_DELETE = ''
 NAME_PRODUCT_PRICE = ''
 
 async def on_startup(_):
+    """Действия перед запуском бота."""
     print('Бот вышел в онлайн...')
 
 
 async def on_shutdown(_):
+    """Действия после остановки бота."""
     print('Закрываю соединение с БД')
 
 b1 = KeyboardButton('Получение списка всех товаров')
@@ -48,6 +50,7 @@ kb_client.row(b1, b2).add(b3).add(b4)
 
 @dp.message_handler(commands=['start', 'help'])
 async def command_start(message: types.Message):
+    """Стартовый обработчик"""
     await message.answer(f'Добрый день {message.from_user.first_name}! '
                          f'Для добавления товара на мониторинг, напишите ссылку'
                          f' на товар.Или воспользуйтесь меню ⬇',

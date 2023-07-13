@@ -1,17 +1,14 @@
-from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
-from alembic import context
-
-from src.config import DB_HOST, DB_PORT, DB_USER, DB_NAME, DB_PASS
-
-
 import os
 import sys
 
+from logging.config import fileConfig
+from sqlalchemy import engine_from_config
+from sqlalchemy import pool
+from alembic import context
+
+from src.config import DB_HOST, DB_PORT, DB_USER, DB_NAME, DB_PASS
 from src.price_monitoring.models import Base as Base_price_monitoring
+
 
 sys.path.append(os.path.join(sys.path[0], 'src'))
 
