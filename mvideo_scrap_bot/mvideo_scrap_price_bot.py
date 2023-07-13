@@ -9,17 +9,18 @@ from dotenv import load_dotenv
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
-import psycopg2 as ps
 from aiogram.utils.markdown import hbold, hlink
-
 from config import DATABASE_URI
+from models import Product, Price
 from scrap_data.scrap_main import ScrapDataProduct
+from sqlalchemy import desc, create_engine, select
+from sqlalchemy.orm import sessionmaker
+
 
 load_dotenv()
 
-base = ps.connect(DATABASE_URI)
-base.autocommit = True
-cur = base.cursor()
+engine = create_engine(DATABASE_URI, echo=True)
+Session = sessionmaker(bind=engine)
 
 bot = Bot(token=os.getenv('TOKEN'), parse_mode=types.ParseMode.HTML)
 dp = Dispatcher(bot)
@@ -28,16 +29,12 @@ PRODUCT_LINC = ''
 NAME_PRODUCT_DELETE = ''
 NAME_PRODUCT_PRICE = ''
 
-
 async def on_startup(_):
     print('Бот вышел в онлайн...')
 
 
 async def on_shutdown(_):
     print('Закрываю соединение с БД')
-    cur.close()
-    base.close()
-
 
 b1 = KeyboardButton('Получение списка всех товаров')
 b2 = KeyboardButton('Удаление товара')
@@ -52,8 +49,8 @@ kb_client.row(b1, b2).add(b3).add(b4)
 @dp.message_handler(commands=['start', 'help'])
 async def command_start(message: types.Message):
     await message.answer(f'Добрый день {message.from_user.first_name}! '
-                         f'Для добавления товара на мониторинг, напишите ссылку на товар.'
-                         f'Или воспользуйтесь меню ⬇',
+                         f'Для добавления товара на мониторинг, напишите ссылку'
+                         f' на товар.Или воспользуйтесь меню ⬇',
                          reply_markup=kb_client,
                          )
 
@@ -66,7 +63,7 @@ price_product = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton(
     lambda message: 'Получение истории цен на товар' in message.text)
 async def delete_product(message: types.Message):
     """История изменения цен на товар."""
-    await message.answer('Напишите в чат: история цен (название товара)')
+    await message.answer('Напишите в чат: история цен (id товара)')
 
 
 @dp.message_handler(lambda message: 'история цен' in message.text.lower())
@@ -75,7 +72,7 @@ async def delete_product(message: types.Message):
     global NAME_PRODUCT_PRICE
     NAME_PRODUCT_PRICE = message.text[11:].strip()
     await message.answer(
-        f'Показать цену именно этого товара? {NAME_PRODUCT_PRICE}',
+        f'Показать цену товара c id? {NAME_PRODUCT_PRICE}',
         reply_markup=price_product,
     )
 
@@ -84,23 +81,26 @@ async def delete_product(message: types.Message):
 async def get_price_product(callback: types.CallbackQuery):
     """История изменения цен на товар."""
     await callback.answer('Показать цены на товар')
-    exists_query = """SELECT EXISTS (SELECT products.name FROM products WHERE name = %s)"""
-    cur.execute(exists_query, (NAME_PRODUCT_PRICE,))
-    if not cur.fetchone()[0]:
+    session = Session()
+    product = session.query(Product).filter(
+        Product.id == NAME_PRODUCT_PRICE).first()
+    if product is None:
         await callback.message.answer(
-            '❌Товара с таким названием ещё нету в списке, сначала добавьте товар')
+            '❌Товара с таким id ещё нету в списке, сначала добавьте'
+            ' товар')
     else:
-        cur.execute(
-            f"""select prices.price, prices.price_at from products join prices on products.id = prices.product_id where products.name = '{NAME_PRODUCT_PRICE}'""")
-        for index, product in enumerate(cur):
-            times = product[1].strftime('%Y.%d.%m %H:%M')
-            card = f'{hbold("Товар: ")} {NAME_PRODUCT_PRICE}\n' \
-                   f'{hbold("Цена: ")} {product[0]}🔥\n' \
-                   f'{hbold("Дата и время обновления: ")} {times}\n'
+        product_prices = select(Price).filter(
+            Price.product_id == NAME_PRODUCT_PRICE).order_by(
+            desc(Price.price_at)
+        )
+        res = session.scalars(product_prices)
+        for index, product in enumerate(res):
+            card = f'{hbold("Товар c id: ")} {NAME_PRODUCT_PRICE}\n' \
+                   f'{hbold("Цена: ")} {product.price}🔥\n' \
+                   f'{hbold("Дата и время обновления: ")} {product.price_at}\n'
 
-            #  Защита от бана за флуд.
-            if index % 20 == 0:
-                time.sleep(3)
+            if index  == 20:
+                break
 
             await callback.message.answer(card)
 
@@ -110,15 +110,15 @@ async def get_price_product(callback: types.CallbackQuery):
 async def all_product(message: types.Message):
     """Просмотр всех товаров на мониторинге."""
     await message.answer('Пожалуйста подождите⌛...')
-    cur.execute(
-        """SELECT * FROM products"""
-    )
-    for index, product in enumerate(cur):
-        linc = hlink(product[2], product[1])
+    session = Session()
+    users = session.query(Product).all()
+    for index, product in enumerate(users):
+        linc = hlink(product.name, product.url)
         card = f'{hbold("Ссылка: ")} {linc}\n' \
-               f'{hbold("Рейтинг: ")} {product[4]}🔥\n' \
-               f'{hbold("Название: ")} {product[2]}\n' \
-               f'{hbold("Описание: ")} {product[3]}\n'
+               f'{hbold("id: ")} {product.id}\n' \
+               f'{hbold("Рейтинг: ")} {product.rating}🔥\n' \
+               f'{hbold("Название: ")} {product.name}\n' \
+               f'{hbold("Описание: ")} {product.description}\n'
 
         #  Защита от бана за флуд.
         if index % 20 == 0:
@@ -135,7 +135,7 @@ del_product_inline = InlineKeyboardMarkup(row_width=2).add(InlineKeyboardButton(
 async def delete_product(message: types.Message):
     """Удаление товара из мониторинга."""
     await message.answer('Напишите в чат:'
-                         ' удалить (полное название товара из карточки)')
+                         ' удалить (id товара из карточки)')
 
 
 @dp.message_handler(lambda message: 'удалить' in message.text.lower())
@@ -152,9 +152,10 @@ async def delete_product(message: types.Message):
 @dp.callback_query_handler(text='delet')
 async def www_pars(callback: types.CallbackQuery):
     """Удаление товара из мониторинга."""
-    await callback.answer('Начать удаление?', show_alert=True)
-    cur.execute("DELETE FROM products WHERE name = %s",
-                (NAME_PRODUCT_DELETE,))
+    session = Session()
+    product_delete = session.get(Product, NAME_PRODUCT_DELETE)
+    session.delete(product_delete)
+    session.commit()
     await callback.message.answer('Товар успешно удалён 🗑')
 
 
@@ -191,14 +192,20 @@ async def www_pars(callback: types.CallbackQuery):
     name = product['name']
     description = product['description']
     rating = product['rating']
-    exists_query = """SELECT EXISTS (SELECT products.url FROM products WHERE url = %s)"""
-    cur.execute(exists_query, (linc,))
-    if cur.fetchone()[0]:
-        await callback.message.answer('❌Товар уже был добавлен ранее')
+    session = Session()
+    product = session.query(Product).filter(
+        Product.url == linc).first()
+    if product is not None:
+        await callback.message.answer(
+            '❌ Данный товар уже присутствует на мониторинге.')
     else:
-        cur.execute(
-            """INSERT INTO products (url, name, description, rating) VALUES (%s, %s, %s, %s);""",
-            (linc, name, description, rating))
+        new_product = Product(url=linc,
+                              name=name,
+                              description=description,
+                              rating=rating,
+                              )
+        session.add(new_product)
+        session.commit()
         await callback.message.answer('Товар успешно добавлен✅')
 
 
@@ -206,8 +213,8 @@ async def www_pars(callback: types.CallbackQuery):
 async def echo_send(message: types.Message):
     """Эхо обработчик."""
     await message.reply(
-        'Неверная команда, прочтите ещё раз какой должен быть запрос и повтрите'
-        ' попытку...')
+        'Неверная команда, прочтите ещё раз какой должен быть запрос и'
+        ' повторите попытку...')
 
 
 def main():

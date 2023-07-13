@@ -1,38 +1,42 @@
 from datetime import datetime
 
-import psycopg2 as ps
+# import psycopg2 as ps
 import schedule
-
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import sessionmaker
 from config import DATABASE_URI, SEC
+from models import Product, Price
 from scrap_data.scrap_main import ScrapDataProduct
 
-con = ps.connect(DATABASE_URI)
-con.autocommit = True
+# con = ps.connect(DATABASE_URI)
+# con.autocommit = True
+engine = create_engine(DATABASE_URI)
+Session = sessionmaker(bind=engine)
 
 URL_LIST = []
 
 
 def scrap_one_hour():
-    with con.cursor() as cursor:
-        cursor.execute(
-            """SELECT products.url FROM products"""
-        )
-        for i in cursor:
-            URL_LIST.append(i[0])
+    # with con.cursor() as cursor:
+    #     cursor.execute(
+    #         """SELECT products.url FROM products"""
+    #     )
+    session = Session()
+    for i in session.query(Product).all():
+        URL_LIST.append(i.url)
 
-    with con.cursor() as cursor:
-        for i in URL_LIST:
-            price = ScrapDataProduct(i).scrap_price()
-            cursor.execute(
-                """SELECT products.id FROM products WHERE products.url = %s""",
-                (i,)
-            )
-            product_id = cursor.fetchone()[0]
-            price_at = datetime.utcnow()
-            cursor.execute(
-                """INSERT INTO prices (price, price_at, product_id) VALUES (%s, %s, %s)""",
-                (price, price_at, product_id))
-            print('[INFO] Data was successfully inserted')
+
+    for i in URL_LIST:
+        price = ScrapDataProduct(i).scrap_price()
+        session = Session()
+        product = session.query(Product).filter(Product.url == i).first()
+        price_at = datetime.utcnow()
+        new_price = Price(price=price,
+                          price_at=price_at,
+                          product_id=product.id)
+        session.add(new_price)
+        session.commit()
+        print('[INFO] Data was successfully inserted')
 
 
 def main():

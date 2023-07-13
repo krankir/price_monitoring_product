@@ -12,8 +12,11 @@ headers = {
     'Accept-Language': 'ru',
     'Sec-Fetch-Mode': 'cors',
     'Host': 'www.mvideo.ru',
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5.1 Safari/605.1.15',
-    'Referer': 'https://www.mvideo.ru/products/smartfon-samsung-galaxy-s22-8-128gb-green-sm-s901b-30063621',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'
+                  ' AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5.1'
+                  ' Safari/605.1.15',
+    'Referer': 'https://www.mvideo.ru/products/smartfon-samsung-galaxy-s22-8-'
+               '128gb-green-sm-s901b-30063621',
     'Connection': 'keep-alive',
 }
 
@@ -36,7 +39,10 @@ headers_price = {
     'Accept-Language': 'ru',
     'Sec-Fetch-Mode': 'cors',
     'Host': 'www.mvideo.ru',
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5.1 Safari/605.1.15',
-    'Referer': 'https://www.mvideo.ru/products/smartfon-samsung-galaxy-s22-8-128gb-green-sm-s901b-30063621',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+                  'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5.1 '
+                  'Safari/605.1.15',
+    'Referer': 'https://www.mvideo.ru/products/smartfon-samsung-galaxy-s22-8-'
+               '128gb-green-sm-s901b-30063621',
     'Connection': 'keep-alive',
 }

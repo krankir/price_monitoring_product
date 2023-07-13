@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SEC = 10  # Период обновления цен на товар, задаётся в секундах.
+SEC = 100  # Период обновления цен на товар, задаётся в секундах.
 
 DB_USER = os.getenv('DB_USER')
 DB_PASS = os.getenv('DB_PASS')
