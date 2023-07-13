@@ -12,12 +12,14 @@ from aiogram.utils.markdown import hbold, hlink
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from dotenv import load_dotenv
-from config import DATABASE_URI
-from models import Product, Price
 from scrap_data.scrap_main import ScrapDataProduct
 from sqlalchemy import desc, create_engine, select
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+
+from models import Product, Price
+from config import DATABASE_URI
+
 
 
 load_dotenv()
@@ -73,13 +75,13 @@ async def command_start(message: types.Message):
 
 @dp.message_handler(
     lambda message: 'Получение истории цен на товар' in message.text)
-async def delete_product(message: types.Message):
+async def price_product(message: types.Message):
     """История изменения цен на товар."""
     await message.answer('Напишите в чат id товара ')
     await ChoiceIdProductPrice.id_product_price.set()
 
 @dp.message_handler(state=ChoiceIdProductPrice.id_product_price)
-async def delete_product(message: types.Message, state: FSMContext):
+async def price_history_product(message: types.Message, state: FSMContext):
     """История изменения цен на товар."""
     await state.update_data(id_product_price=message.text)
     data = await state.get_data()
@@ -131,7 +133,7 @@ async def all_product(message: types.Message):
 
 
 @dp.message_handler(lambda message: 'Удаление товара' in message.text)
-async def delete_product(message: types.Message):
+async def delete_product_(message: types.Message):
     """Удаление товара из мониторинга."""
     await message.answer(
         'Напишите id товара из карточки для его удаления из мониторинга'
@@ -199,6 +201,7 @@ async def echo_send(message: types.Message):
 
 
 def main():
+    """Функция запуска."""
     executor.start_polling(dp, skip_updates=True,
                            on_startup=on_startup,
                            on_shutdown=on_shutdown,
