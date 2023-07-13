@@ -48,7 +48,7 @@ async def get_biggest_cities(
     }
 
 
-@router.get('/product_prices', response_model=ServerResponse)
+@router.get('/product_prices/{product_id}', response_model=ServerResponse)
 async def product_price(
         product_id: int,
         session: AsyncSession = Depends(get_async_session), ):

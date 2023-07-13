@@ -54,17 +54,14 @@ async def command_start(message: types.Message):
                          reply_markup=kb_client,
                          )
 
-
 price_product = InlineKeyboardMarkup(row_width=1).add(InlineKeyboardButton(
     text='Да, показать цену этого товара', callback_data='get_price'))
-
 
 @dp.message_handler(
     lambda message: 'Получение истории цен на товар' in message.text)
 async def delete_product(message: types.Message):
     """История изменения цен на товар."""
     await message.answer('Напишите в чат: история цен (id товара)')
-
 
 @dp.message_handler(lambda message: 'история цен' in message.text.lower())
 async def delete_product(message: types.Message):
@@ -75,7 +72,6 @@ async def delete_product(message: types.Message):
         f'Показать цену товара c id? {NAME_PRODUCT_PRICE}',
         reply_markup=price_product,
     )
-
 
 @dp.callback_query_handler(text='get_price')
 async def get_price_product(callback: types.CallbackQuery):
@@ -104,7 +100,6 @@ async def get_price_product(callback: types.CallbackQuery):
 
             await callback.message.answer(card)
 
-
 @dp.message_handler(
     lambda message: 'Получение списка всех товаров' in message.text)
 async def all_product(message: types.Message):
@@ -126,17 +121,14 @@ async def all_product(message: types.Message):
 
         await message.answer(card)
 
-
 del_product_inline = InlineKeyboardMarkup(row_width=2).add(InlineKeyboardButton(
     text='Да, удалить с мониторинга', callback_data='delet'))
-
 
 @dp.message_handler(lambda message: 'Удаление товара' in message.text)
 async def delete_product(message: types.Message):
     """Удаление товара из мониторинга."""
     await message.answer('Напишите в чат:'
                          ' удалить (id товара из карточки)')
-
 
 @dp.message_handler(lambda message: 'удалить' in message.text.lower())
 async def delete_product(message: types.Message):
@@ -148,7 +140,6 @@ async def delete_product(message: types.Message):
         reply_markup=del_product_inline,
     )
 
-
 @dp.callback_query_handler(text='delet')
 async def www_pars(callback: types.CallbackQuery):
     """Удаление товара из мониторинга."""
@@ -158,18 +149,15 @@ async def www_pars(callback: types.CallbackQuery):
     session.commit()
     await callback.message.answer('Товар успешно удалён 🗑')
 
-
 add_products_inline = InlineKeyboardMarkup(row_width=1).add(
     InlineKeyboardButton(
         text='Добавить товар на мониторинг', callback_data='scrap'))
-
 
 @dp.message_handler(
     lambda message: 'Добавить товар на мониторинг' in message.text)
 async def delete_product(message: types.Message):
     """Добавление товара на мониторинг."""
     await message.answer('Напишите в чат: ссылку на товар с сайта М.видео')
-
 
 @dp.message_handler(
     lambda message: 'https://www.mvideo.ru/products/' in message.text)
@@ -181,7 +169,6 @@ async def www_par(message: types.Message):
         'Вы уверены что хотите добавить именно этот товар? ',
         reply_markup=add_products_inline,
     )
-
 
 @dp.callback_query_handler(text='scrap')
 async def www_pars(callback: types.CallbackQuery):
@@ -208,7 +195,6 @@ async def www_pars(callback: types.CallbackQuery):
         session.commit()
         await callback.message.answer('Товар успешно добавлен✅')
 
-
 @dp.message_handler()
 async def echo_send(message: types.Message):
     """Эхо обработчик."""
@@ -216,13 +202,11 @@ async def echo_send(message: types.Message):
         'Неверная команда, прочтите ещё раз какой должен быть запрос и'
         ' повторите попытку...')
 
-
 def main():
     executor.start_polling(dp, skip_updates=True,
                            on_startup=on_startup,
                            on_shutdown=on_shutdown,
                            )
-
 
 if __name__ == '__main__':
     main()

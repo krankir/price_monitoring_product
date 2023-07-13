@@ -1,12 +1,11 @@
 from datetime import datetime
-
 from sqlalchemy import (
     Column, Integer, String, TIMESTAMP, Numeric, ForeignKey, Float,
 )
 from sqlalchemy.orm import relationship, declarative_base
 
-Base = declarative_base()
 
+Base = declarative_base()
 
 class Product(Base):
     """Таблица товара."""
@@ -21,8 +20,7 @@ class Product(Base):
     prices = relationship('Price', back_populates="products",
                           passive_deletes=True)
 
-
-product_tb = Product.__table__
+roduct_tb = Product.__table__
 
 
 class Price(Base):
@@ -36,6 +34,5 @@ class Price(Base):
     product_id = Column(Integer, ForeignKey('products.id',
                                             ondelete='CASCADE'), nullable=False)
     products = relationship('Product', back_populates='prices')
-
 
 price_tb = Price.__table__

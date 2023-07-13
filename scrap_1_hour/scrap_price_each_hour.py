@@ -1,6 +1,4 @@
 from datetime import datetime
-
-# import psycopg2 as ps
 import schedule
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
@@ -8,19 +6,13 @@ from config import DATABASE_URI, SEC
 from models import Product, Price
 from scrap_data.scrap_main import ScrapDataProduct
 
-# con = ps.connect(DATABASE_URI)
-# con.autocommit = True
+
 engine = create_engine(DATABASE_URI)
 Session = sessionmaker(bind=engine)
 
 URL_LIST = []
 
-
 def scrap_one_hour():
-    # with con.cursor() as cursor:
-    #     cursor.execute(
-    #         """SELECT products.url FROM products"""
-    #     )
     session = Session()
     for i in session.query(Product).all():
         URL_LIST.append(i.url)
@@ -38,7 +30,6 @@ def scrap_one_hour():
         session.commit()
         print('[INFO] Data was successfully inserted')
 
-
 def main():
     """Планировщик выполнения скрипта"""
     # schedule.every().hour.do(scrap_one_hour)
@@ -47,7 +38,5 @@ def main():
     while True:
         schedule.run_pending()
 
-
 if __name__ == '__main__':
     main()
-

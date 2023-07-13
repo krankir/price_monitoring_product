@@ -1,9 +1,5 @@
 from datetime import datetime
-from typing import Optional
-
-
-from pydantic.types import Json
-
+from typing import Optional, Union
 from pydantic import BaseModel
 
 
@@ -21,8 +17,7 @@ class PricesSchema(BaseModel):
     price_at: Optional[datetime] = None
 
 
-
 class ServerResponse(BaseModel):
     error: bool = False
     message: str = 'success'
-    payload: Optional[list] = None
+    payload: Union[list, None] = None
