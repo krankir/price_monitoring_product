@@ -147,8 +147,8 @@ async def delete_product(message: types.Message, state: FSMContext):
     product_delete = session.get(Product, id_p)
     session.delete(product_delete)
     session.commit()
-    await state.finish()
     await message.answer('Товар успешно удалён 🗑')
+    await state.finish()
 
 
 @dp.message_handler(

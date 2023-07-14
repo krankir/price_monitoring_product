@@ -16,7 +16,7 @@ services:
     env_file:
       - .env-non-dev
     container_name: fastapi_app
-    command: [ '/fastapi_app/docker/app.sh', '/fastapi_app/docker/scrap_1_hour_price.sh' ]
+    command: ['/fastapi_app/docker/app.sh']
     ports:
       - 8000:8000
     restart: always
