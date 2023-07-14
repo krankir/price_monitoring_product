@@ -155,14 +155,15 @@ async def delete_product(message: types.Message, state: FSMContext):
     lambda message: 'Добавить товар на мониторинг' in message.text)
 async def add_product(message: types.Message):
     """Добавление товара на мониторинг."""
-    text_ = 'Напишите ссылку на товар с сайта М.видео'
-    await message.answer(text_)
+    await message.answer('Напишите ссылку на товар с сайта М.видео')
     await ChoiceLincProduct.product_linc.set()
-
 
 @dp.message_handler(state=ChoiceLincProduct.product_linc)
 async def www_par(message: types.Message, state: FSMContext):
     """Добавление товара на мониторинг."""
+    if message.text[:31] != 'https://www.mvideo.ru/products/':
+        await message.answer('❌ Некорректная ссылка на товар.')
+        return
     await state.update_data(product_linc=message.text)
     data = await state.get_data()
     linc = data.get('product_linc')
