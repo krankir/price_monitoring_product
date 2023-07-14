@@ -5,6 +5,14 @@ from scrap_data.cookies_and_headers import (
     cookies, headers, cookies_price, headers_price,
 )
 from scrap_data.models import Item
+from proxy_manager_g4 import ProxyManager
+from proxy_manager_g4.consts import PROTOCOL_HTTPS
+
+
+proxy_manager = ProxyManager(protocol=PROTOCOL_HTTPS, anonymity=True)
+
+pr = proxy_manager.get_random()
+proxy = {pr.ip: pr.port}
 
 
 class ScrapDataProduct:
@@ -29,6 +37,7 @@ class ScrapDataProduct:
                                 cookies=cookies,
                                 headers=headers,
                                 timeout=10,
+                                proxies=proxy
                                 )
         products_infos = Item.parse_obj(response.json()['body'])
         data_dict = {
@@ -55,6 +64,7 @@ class ScrapDataProduct:
             cookies=cookies_price,
             headers=headers_price,
             timeout=10,
+            proxies=proxy
         )
         price = (response_pr.json()).get('body').get('materialPrices')[0].get(
             'price').get('salePrice')
