@@ -1,12 +1,12 @@
 import re
 import requests
+from proxy_manager_g4 import ProxyManager
+from proxy_manager_g4.consts import PROTOCOL_HTTPS
 
 from scrap_data.cookies_and_headers import (
     cookies, headers, cookies_price, headers_price,
 )
 from scrap_data.models import Item
-from proxy_manager_g4 import ProxyManager
-from proxy_manager_g4.consts import PROTOCOL_HTTPS
 
 
 proxy_manager = ProxyManager(protocol=PROTOCOL_HTTPS, anonymity=True)

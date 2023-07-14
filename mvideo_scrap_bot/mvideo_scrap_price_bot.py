@@ -23,6 +23,7 @@ load_dotenv()
 
 
 def create_async_engine(url):
+    """Создание асинхронного драйвера."""
     return _create_async_engine(url=url,
                                 echo=True,
                                 pool_pre_ping=True,
@@ -30,44 +31,41 @@ def create_async_engine(url):
 
 
 def get_session_maker(engine):
+    """Получение сессии."""
     return sessionmaker(engine, class_=AsyncSession)
 
 
 async_engine = create_async_engine(DATABASE_URI)
 session_maker = get_session_maker(async_engine)
 
+bot = Bot(token=os.getenv('TOKEN'), parse_mode=types.ParseMode.HTML)
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
+
+
+class ChoiceLincProduct(StatesGroup):
+    product_linc = State()
+
+
+class ChoiceIdProductDelete(StatesGroup):
+    id_product_delete = State()
+
+
+class ChoiceIdProductPrice(StatesGroup):
+    id_product_price = State()
+
+
+b1 = KeyboardButton('Получение списка всех товаров')
+b2 = KeyboardButton('Удаление товара')
+b3 = KeyboardButton('Добавить товар на мониторинг')
+b4 = KeyboardButton('Получение истории цен на товар')
+
+kb_client = ReplyKeyboardMarkup(resize_keyboard=True)
+
+kb_client.row(b1, b2).add(b3).add(b4)
+
 
 async def main():
-    bot = Bot(token=os.getenv('TOKEN'), parse_mode=types.ParseMode.HTML)
-    storage = MemoryStorage()
-    dp = Dispatcher(bot, storage=storage)
-
-    class ChoiceLincProduct(StatesGroup):
-        product_linc = State()
-
-    class ChoiceIdProductDelete(StatesGroup):
-        id_product_delete = State()
-
-    class ChoiceIdProductPrice(StatesGroup):
-        id_product_price = State()
-
-    async def on_startup(_):
-        """Действия перед запуском бота."""
-        print('Бот вышел в онлайн...')
-
-    async def on_shutdown(_):
-        """Действия после остановки бота."""
-        print('Закрываю соединение с БД')
-
-    b1 = KeyboardButton('Получение списка всех товаров')
-    b2 = KeyboardButton('Удаление товара')
-    b3 = KeyboardButton('Добавить товар на мониторинг')
-    b4 = KeyboardButton('Получение истории цен на товар')
-
-    kb_client = ReplyKeyboardMarkup(resize_keyboard=True)
-
-    kb_client.row(b1, b2).add(b3).add(b4)
-
     @dp.message_handler(commands=['start', 'help'])
     async def command_start(message: types.Message):
         """Стартовый обработчик"""
