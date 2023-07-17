@@ -1,19 +1,17 @@
+import os
+
 import re
 import requests
-from proxy_manager_g4 import ProxyManager
-from proxy_manager_g4.consts import PROTOCOL_HTTPS
-
+from dotenv import load_dotenv
 from scrap_data.cookies_and_headers import (
     cookies, headers, cookies_price, headers_price,
 )
 from scrap_data.models import Item
 
 
-proxy_manager = ProxyManager(protocol=PROTOCOL_HTTPS, anonymity=True)
+load_dotenv()
 
-pr = proxy_manager.get_random()
-proxy = {pr.ip: pr.port}
-
+PROXY_MANAGER_API_KEY = os.getenv('PROXY_MANAGER_API_KEY')
 
 class ScrapDataProduct:
     """Получения информации о товаре."""
@@ -31,13 +29,18 @@ class ScrapDataProduct:
     def scrap(self):
         """Получение данных о продукте."""
         product_id = self.__get_product_id()
-        params = {'productId': product_id}
+        params = {
+            'productId': product_id,
+            'token': PROXY_MANAGER_API_KEY,
+            'type': 'socks5',
+            'count': 1,
+            'country': 'ru',
+        }
         response = requests.get('https://www.mvideo.ru/bff/product-details',
                                 params=params,
                                 cookies=cookies,
                                 headers=headers,
                                 timeout=10,
-                                proxies=proxy
                                 )
         products_infos = Item.parse_obj(response.json()['body'])
         data_dict = {
@@ -57,6 +60,10 @@ class ScrapDataProduct:
             'productIds': product_id,
             'isPromoApplied': 'true',
             'addBonusRubles': 'true',
+            'token': PROXY_MANAGER_API_KEY,
+            'type': 'socks5',
+            'count': 1,
+            'country': 'ru',
         }
         response_pr = requests.get(
             'https://www.mvideo.ru/bff/products/prices',
@@ -64,7 +71,6 @@ class ScrapDataProduct:
             cookies=cookies_price,
             headers=headers_price,
             timeout=10,
-            proxies=proxy
         )
         price = (response_pr.json()).get('body').get('materialPrices')[0].get(
             'price').get('salePrice')
