@@ -15,20 +15,28 @@ URL_LIST = []
 def scrap_one_hour():
     """Периодическое получение цены и занесение значений в базу данных."""
     session = Session()
-    for i in session.query(Product).all():
-        URL_LIST.append(i.url)
+    for product in session.query(Product).all():
+        URL_LIST.append(product.url)
 
-    for i in URL_LIST:
-        price = ScrapDataProduct(i).scrap_price()
-        session = Session()
-        product = session.query(Product).filter(Product.url == i).first()
-        price_at = datetime.utcnow()
-        new_price = Price(price=price,
-                          price_at=price_at,
-                          product_id=product.id)
-        session.add(new_price)
-        session.commit()
-        print('[INFO] Data was successfully inserted')
+    session.close()
+
+    current_time = datetime.utcnow()
+    new_prices = []
+
+    for url in URL_LIST:
+        price = ScrapDataProduct(url).scrap_price()
+
+        product = session.query(Product).filter(Product.url == url).first()
+        new_price = Price(
+            price=price, price_at=current_time, product_id=product.id)
+        new_prices.append(new_price)
+
+    session = Session()
+    session.add_all(new_prices)
+    session.commit()
+    session.close()
+
+    print('[INFO] Data was successfully inserted')
 
 
 def main():
