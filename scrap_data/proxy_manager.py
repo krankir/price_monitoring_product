@@ -20,9 +20,14 @@ response_data = response.json()
 if response_data['error'] or not response_data['payload']:
     raise RuntimeError('Proxy loading failed: ' + response_data['message'])
 else:
-    response_data['payload'][0]
-
+    res_d = response_data['payload'][0]
+    socks5 = res_d['type']
+    user = res_d['login']
+    password = res_d['password']
+    host = res_d['host']
+    port = res_d['port']
 
 proxy = {
-    response_data['payload'][0]['host']: response_data['payload'][0]['port'],
+    'http': f'{socks5}://{user}:{password}@{host}:{port}',
+    'https': f'{socks5}://{user}:{password}@{host}:{port}',
 }
